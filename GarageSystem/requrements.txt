@@ -1,0 +1,13 @@
+asgiref==3.4.1
+Django==3.2.16
+djangorestframework==3.14.0
+djangorestframework-simplejwt==4.4.0
+geographiclib==1.52
+geopy==2.2.0
+mtaa==1.5
+Pillow==8.4.0
+pkg-resources==0.0.0
+PyJWT==2.4.0
+pytz==2022.6
+sqlparse==0.4.3
+typing-extensions==4.1.1
