@@ -48,6 +48,7 @@ def RegisterEngineer(request):
     response = {'message': "success"}
     return Response(response)
 
+
 # {
 #     "username": "my garage",
 #     "phone": "0693331836",
@@ -92,21 +93,45 @@ def GarageInfo(request, garage_id):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def CreateFeedBack(request):
+def CreateFeedBackRequest(request):
     data = request.data
-    feed = FeedBack.objects.create(
+    feed = FeedBackRequest.objects.create(
         garage_id=Garage.objects.get(id=data['garage_id']),
         driver_id=User.objects.get(id=data['driver_id']),
-        feed=data['feed'],
+        latitude=data['latitude'],
+        longitude=data['longitude']
     )
 
     response = {'message': "success"}
     return Response(response)
 
+
 # {
 #     "garage_id": 1,
 #     "driver_id": 2,
-#     "feed": "good service",
+#     "latitude": "2.00000",
+#     "longitude": "3.00000"
+# }
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def CreateFeedBackAppointment(request):
+    data = request.data
+    feed = FeedBackAppointment.objects.create(
+        garage_id=Garage.objects.get(id=data['garage_id']),
+        driver_id=User.objects.get(id=data['driver_id']),
+        date=data['date']
+    )
+
+    response = {'message': "success"}
+    return Response(response)
+
+
+# {
+#     "garage_id": 1,
+#     "driver_id": 2,
+#     "date": "06-03-2023",
 # }
 
 
@@ -114,31 +139,110 @@ def CreateFeedBack(request):
 @permission_classes([AllowAny])
 def GarageFeeds(request, garage_id):
     garage = Garage.objects.get(id=garage_id)
-    feeds = FeedBack.objects.values('id', 'driver_id', 'feed').filter(garage_id=garage)
-    f = [e for e in feeds]
-    feedback = []
-    for d in f:
+    feed_requests = FeedBackRequest.objects.values('id', 'driver_id', 'latitude', 'longitude', 'is_received').filter(garage_id=garage)
+    fr = [e for e in feed_requests]
+    feedback_request = []
+    for d in fr:
         user = User.objects.get(id=d['driver_id'])
         data = {
-            'id': d['id'],
-            'feed': d['feed'],
+            'feed_id': d['id'],
+            'driver_id': d['driver_id'],
             'phone': user.phone,
-            'email': user.email
+            'email': user.email,
+            'latitude': d['latitude'],
+            'longitude': d['longitude'],
+            'is_received': d['is_received']
         }
-        feedback.append(data)
-    return Response(feedback)
+        feedback_request.append(data)
+
+    feed_appointment = FeedBackAppointment.objects.values('id', 'driver_id', 'date', 'created_at', 'is_received').filter(garage_id=garage)
+    fa = [e for e in feed_appointment]
+    feedback_appointment = []
+    for d in fa:
+        user = User.objects.get(id=d['driver_id'])
+        data = {
+            'feed_id': d['id'],
+            'driver_id': d['driver_id'],
+            'phone': user.phone,
+            'email': user.email,
+            'appointment_date': d['date'],
+            'created_at': d['created_at'],
+            'is_received': d['is_received']
+        }
+        feedback_appointment.append(data)
+    feedback_data = {'request': feedback_request, 'appointment': feedback_appointment}
+    return Response(feedback_data)
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-def FeedInfo(request, feed_id):
-    feed = FeedBack.objects.get(id=feed_id)
+def FeedRequestInfo(request, feed_id):
+    feed = FeedBackRequest.objects.get(id=feed_id)
     user = User.objects.get(id=feed.driver_id)
     data = {
-        'id': feed.id,
-        'feed': feed.feed,
+        'feed_id': feed.id,
+        'user_id': user.id,
         'phone': user.phone,
-        'email': user.email
+        'email': user.email,
+        'latitude': feed.latitude,
+        'longitude': feed.longitude,
+        'is_received': feed.is_received,
     }
     return Response(data)
 
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def FeedAppointmentInfo(request, feed_id):
+    feed = FeedBackAppointment.objects.get(id=feed_id)
+    user = User.objects.get(id=feed.driver_id)
+    data = {
+        'feed_id': feed.id,
+        'user_id': user.id,
+        'phone': user.phone,
+        'email': user.email,
+        'appointment_date': feed.date,
+        'created_at': feed.created_at,
+        'is_received': feed.is_received,
+    }
+    return Response(data)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def toYesAppointment(request, feed_id):
+    feed = FeedBackAppointment.objects.get(id=feed_id)
+    if feed.is_received == 'no':
+        feed.is_received = 'yes'
+        feed.save()
+    return Response({'done': True})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def toApprovedAppointment(request, feed_id):
+    feed = FeedBackAppointment.objects.get(id=feed_id)
+    if feed.is_received == 'yes':
+        feed.is_received = 'approved'
+        feed.save()
+    return Response({'done': True})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def toYesRequest(request, feed_id):
+    feed = FeedBackRequest.objects.get(id=feed_id)
+    if feed.is_received == 'no':
+        feed.is_received = 'yes'
+        feed.save()
+    return Response({'done': True})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def toApprovedRequest(request, feed_id):
+    feed = FeedBackRequest.objects.get(id=feed_id)
+    if feed.is_received == 'yes':
+        feed.is_received = 'approved'
+        feed.save()
+    return Response({'done': True})

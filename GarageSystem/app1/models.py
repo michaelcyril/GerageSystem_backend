@@ -31,14 +31,31 @@ class Engineer(models.Model):
         return f'{self.username} at {self.garage_id.name}'
 
 
-class FeedBack(models.Model):
+class FeedBackRequest(models.Model):
+    choice = (('no', 'no'), ('yes', 'tes'), ('approved', 'approved'))
     garage_id = models.ForeignKey(Garage, on_delete=models.CASCADE)
     driver_id = models.ForeignKey(User, on_delete=models.CASCADE)
-    feed = models.TextField()
+    latitude = models.CharField(max_length=200)
+    longitude = models.CharField(max_length=200)
+    is_received = models.CharField(default='no', choices=choice)
 
     def __str__(self):
-        return f'{self.garage_id.name} - {self.feed}'
+        return f'{self.garage_id.name} - {self.driver_id.name}'
 
     class Meta:
-        db_table = 'feedback'
+        db_table = 'feedback_request'
 
+
+class FeedBackAppointment(models.Model):
+    choice = (('no', 'no'), ('yes', 'tes'), ('approved', 'approved'))
+    garage_id = models.ForeignKey(Garage, on_delete=models.CASCADE)
+    driver_id = models.ForeignKey(User, on_delete=models.CASCADE)
+    date = models.DateTimeField(auto_now_add=True)
+    created_at = models.CharField(max_length=200)
+    is_received = models.CharField(default='no', choices=choice)
+
+    def __str__(self):
+        return f'{self.garage_id.name} - {self.driver_id.name}'
+
+    class Meta:
+        db_table = 'feedback_appontment'
